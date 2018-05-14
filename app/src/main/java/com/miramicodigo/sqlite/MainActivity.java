@@ -36,22 +36,34 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         lista.setAdapter(adaptadorLista);
         registerForContextMenu(lista);
 
-
+        db = new DatabaseAdapter(this);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-
-
+        db.abrir();
+        cargarDatosLista();
     }
 
     public void cargarDatosLista() {
         ids.clear();
         adaptadorLista.eliminarTodo();
-
-
-
+        Cursor cursor = db.obtenerTodasPersonas();
+        if(cursor.moveToFirst()) {
+            do{
+                int id = cursor.getInt(0);
+                String nombre = cursor.getString(1);
+                String correo = cursor.getString(3);
+                String genero = cursor.getString(4);
+                ids.add((long) id);
+                if(genero.equalsIgnoreCase("m")) {
+                    adaptadorLista.adicionarItem(R.drawable.man, nombre, correo);
+                } else {
+                    adaptadorLista.adicionarItem(R.drawable.woman, nombre, correo);
+                }
+            }while(cursor.moveToNext());
+        }
         adaptadorLista.notifyDataSetChanged();
     }
 
@@ -65,8 +77,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_adicionar:
-
-
+                Intent intent = new Intent(this, FormularioActivity.class);
+                startActivity(intent);
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -84,12 +96,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         int index = info.position;
         switch (item.getItemId()) {
             case R.id.menu_editar:
-
-
+                Intent intent = new Intent(this, FormularioActivity.class);
+                intent.putExtra("id", ids.get(index));
+                startActivity(intent);
                 break;
             case R.id.menu_eliminar:
-
-
+                db.eliminarPersona(ids.get(index));
+                ids.remove(index);
+                cargarDatosLista();
                 break;
         }
         return super.onContextItemSelected(item);
@@ -98,14 +112,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onStop() {
         super.onStop();
-
-
+        db.cerrar();
     }
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-
+        Intent intent = new Intent(this, DetalleActivity.class);
+        intent.putExtra("id", ids.get(i));
+        startActivity(intent);
     }
 
 
